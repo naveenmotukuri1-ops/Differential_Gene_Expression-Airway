@@ -1,0 +1,79 @@
+
+======================================================================
+  1. Mock comparison: control vs control
+======================================================================
+              cell fake
+SRR1039508  N61311    A
+SRR1039512 N052611    A
+SRR1039516 N080611    B
+SRR1039520 N061011    B
+Genes 'DE' at FDR 5% in a comparison with no real biology: 38 
+  saved: results/08_simulation/mock_pvalues.png
+A handful of hits here are donor-specific genes (any 2-vs-2 split of donors
+ differs somewhere). Run a mock comparison on your own data whenever you can.
+
+======================================================================
+  2. A simulator built from real data
+======================================================================
+Gene pool for simulation: 16120 genes
+
+======================================================================
+  3. Power and FDR vs replicates (this is the slow part)
+======================================================================
+ n method         variability observed_FDR sensitivity
+ 2 DESeq2 cell line (BCV~0.1)       0.0568       0.724
+ 3 DESeq2 cell line (BCV~0.1)       0.0507       0.796
+ 5 DESeq2 cell line (BCV~0.1)       0.0647       0.879
+ 8 DESeq2 cell line (BCV~0.1)       0.0607       0.929
+ 2  edgeR cell line (BCV~0.1)       0.0642       0.748
+ 3  edgeR cell line (BCV~0.1)       0.0318       0.799
+ 5  edgeR cell line (BCV~0.1)       0.0528       0.871
+ 8  edgeR cell line (BCV~0.1)       0.0455       0.917
+ 2   voom cell line (BCV~0.1)       0.0622       0.735
+ 3   voom cell line (BCV~0.1)       0.0336       0.791
+ 5   voom cell line (BCV~0.1)       0.0530       0.869
+ 8   voom cell line (BCV~0.1)       0.0342       0.917
+ 2 DESeq2    tissue (BCV~0.3)       0.1628       0.251
+ 3 DESeq2    tissue (BCV~0.3)       0.1302       0.346
+ 5 DESeq2    tissue (BCV~0.3)       0.0912       0.526
+ 8 DESeq2    tissue (BCV~0.3)       0.0929       0.594
+ 2  edgeR    tissue (BCV~0.3)       0.0663       0.139
+ 3  edgeR    tissue (BCV~0.3)       0.0590       0.244
+ 5  edgeR    tissue (BCV~0.3)       0.0488       0.438
+ 8  edgeR    tissue (BCV~0.3)       0.0436       0.540
+ 2   voom    tissue (BCV~0.3)       0.0860       0.152
+ 3   voom    tissue (BCV~0.3)       0.0725       0.228
+ 5   voom    tissue (BCV~0.3)       0.0238       0.407
+ 8   voom    tissue (BCV~0.3)       0.0465       0.510
+  saved: results/08_simulation/power_curve.png
+  saved: results/08_simulation/fdr_curve.png
+
+Takeaways: with clean cell lines even n=2-3 finds most changes. With
+ tissue-level variability the same n misses a large share, and only more
+ replicates recover it. Estimate YOUR BCV (module 05) before choosing n.
+ Check the FDR column too: edgeR-QL and voom stay near 5%, while DESeq2's
+ Wald test can run above the nominal FDR with few, noisy replicates (QL methods
+ are deliberately more conservative). Exact numbers move between runs -- change
+ the seed or add reps to see how much. Real data has outliers and batch effects
+ the simulator lacks, so this is the BEST case.
+
+DESeq2 sensitivity by true |log2FC| (n=3, tissue-level variability):
+[0.5,1] (1,1.5] (1.5,2]   (2,3] (3,Inf] 
+   0.11    0.25    0.49    0.71    1.00 
+
+======================================================================
+  4. Pitfall: technical replicates are not biological replicates
+======================================================================
+Mock comparison, technical runs as samples:  3148 'DE' genes
+ Same data, runs summed per donor (collapseReplicates): 55 
+ Technical replicates only measure sequencing noise, so the model thinks the
+ data are far more precise than they are. Sum them; never count them as n.
+
+======================================================================
+  5. Pitfall: double dipping
+======================================================================
+True DE genes: 0. Smallest padj: 0.019 
+  saved: results/08_simulation/double_dipping_heatmap.png
+The heatmap clusters the samples perfectly by group -- from noise. Genes
+ SELECTED for separating the groups will always separate the groups. Such a
+ heatmap illustrates a result; it is never evidence for one.

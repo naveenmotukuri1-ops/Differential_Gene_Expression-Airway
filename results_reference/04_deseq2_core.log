@@ -1,0 +1,112 @@
+
+======================================================================
+  1. Design: the single most important decision
+======================================================================
+Reference level of dex: control  (log2FC will be treated / control)
+
+======================================================================
+  2. Run DESeq()
+======================================================================
+estimating size factors
+estimating dispersions
+gene-wise dispersion estimates
+mean-dispersion relationship
+final dispersion estimates
+fitting model and testing
+[1] "Intercept"               "cell_N061011_vs_N052611"
+[3] "cell_N080611_vs_N052611" "cell_N61311_vs_N052611" 
+[5] "dex_treated_vs_control" 
+  saved: results/04_deseq2/dispersion.png
+
+Dispersion plot: black = per-gene estimate, red = fitted trend,
+ blue = shrunken (final) values. Circled = outliers kept at their own value.
+ Shrinkage borrows information across genes -- crucial with n=4 per group.
+
+======================================================================
+  3. Results: paired vs unpaired design
+======================================================================
+
+out of 16139 with nonzero total read count
+adjusted p-value < 0.05
+LFC > 0 (up)       : 2190, 14%
+LFC < 0 (down)     : 1891, 12%
+outliers [1]       : 0, 0%
+low counts [2]     : 313, 1.9%
+(mean count < 10)
+[1] see 'cooksCutoff' argument of ?results
+[2] see 'independentFiltering' argument of ?results
+
+Significant at FDR 5%:  paired design = 4081   unpaired design = 2773 
+ Modelling donor removes donor-to-donor variation from the residual noise,
+ so the same data gives more power. Ignoring structure = wasting samples.
+
+Columns of the results table:
+[1] "mean of normalized counts for all samples"     
+[2] "log2 fold change (MLE): dex treated vs control"
+[3] "standard error: dex treated vs control"        
+[4] "Wald statistic: dex treated vs control"        
+[5] "Wald test p-value: dex treated vs control"     
+[6] "BH adjusted p-values"                          
+
+======================================================================
+  4. Independent filtering and outliers
+======================================================================
+Independent filtering threshold (baseMean): 10.32 
+ Genes with NA padj because of low counts: 313 
+ Genes with NA p-value (Cook's outlier or all zero): 0 
+  saved: results/04_deseq2/independent_filtering.png
+  saved: results/04_deseq2/pvalue_hist.png
+
+======================================================================
+  5. log2 fold-change shrinkage
+======================================================================
+  saved: results/04_deseq2/MA_mle_vs_shrunken.png
+  saved: results/04_deseq2/lfc_shrinkage_scatter.png
+Use shrunken LFCs for ranking, plots, and GSEA. Use the Wald p-values from
+ results() for significance (apeglm s-values are an alternative).
+
+======================================================================
+  6. Testing a biologically meaningful effect size
+======================================================================
+padj<.05 then |LFC|>1 post-hoc: 951 genes
+ Formal test H0: |LFC| <= 1     : 223 genes
+ The formal test is stricter -- and it is the one whose FDR is valid.
+
+======================================================================
+  7. The results table you would hand to a biologist
+======================================================================
+Top 15 genes:
+  symbol baseMean log2FC_shrunk          padj
+ SPARCL1    998.0         4.556 5.641706e-132
+  CACNB2    495.6         3.276 5.641706e-132
+   DUSP1   3412.0         2.935 1.273761e-124
+  SAMHD1  12712.9         3.754 2.968001e-124
+    MAOA   2343.6         3.337 3.609423e-119
+    GPX3  12298.2         3.712 1.372037e-106
+  STEAP2   3012.9         1.964 4.035013e-101
+    NEXN   5399.1         2.023  1.237144e-96
+    MT2A   3659.7         2.197  2.000955e-91
+ ADAMTS1  30345.8         2.330  4.098766e-85
+    FGD4   1224.6         2.213  2.658331e-83
+    PDPN   1100.8         1.878  1.504597e-82
+   VCAM1    509.7        -3.678  1.864957e-81
+    PER1    777.1         3.171  1.864957e-81
+   SORT1   5516.9         2.181  4.081902e-81
+
+Sanity check with biology: glucocorticoid targets such as FKBP5, TSC22D3,
+ PER1, ZBTB16, KLF15 and DUSP1 should be up. If they aren't, suspect a sample swap.
+  symbol log2FC_shrunk          padj
+   DUSP1         2.935 1.273761e-124
+    PER1         3.171  1.864957e-81
+   KLF15         4.429  7.808269e-78
+  ZBTB16         7.269  2.724385e-40
+   FKBP5         3.966  7.443841e-26
+ TSC22D3         3.114  3.241943e-19
+
+======================================================================
+  8. Volcano, heatmap, single genes
+======================================================================
+  saved: results/04_deseq2/volcano.png
+  saved: results/04_deseq2/heatmap_top40.png
+  saved: results/04_deseq2/top_gene_paired.png
+Saved DESeq2 objects for modules 05-06 and 08.

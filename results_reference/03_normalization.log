@@ -1,0 +1,71 @@
+
+======================================================================
+  1. Median-of-ratios by hand (DESeq2's method)
+======================================================================
+Genes usable (no zeros in any sample): 16072 
+           manual DESeq2 lib_size_ratio
+SRR1039508 1.0220 1.0220         0.9603
+SRR1039509 0.8961 0.8961         0.8753
+SRR1039512 1.1740 1.1740         1.1794
+SRR1039513 0.6684 0.6684         0.7057
+SRR1039516 1.1754 1.1754         1.1375
+SRR1039517 1.3993 1.3993         1.4341
+SRR1039520 0.9165 0.9165         0.8898
+SRR1039521 0.9451 0.9451         0.9848
+Manual size factors match DESeq2 exactly.
+  saved: results/03_norm/median_of_ratios.png
+
+======================================================================
+  2. TMM (edgeR's method)
+======================================================================
+           manual DESeq2 lib_size_ratio TMM_effective
+SRR1039508 1.0220 1.0220         0.9603        1.0138
+SRR1039509 0.8961 0.8961         0.8753        0.8931
+SRR1039512 1.1740 1.1740         1.1794        1.1692
+SRR1039513 0.6684 0.6684         0.7057        0.6689
+SRR1039516 1.1754 1.1754         1.1375        1.1729
+SRR1039517 1.3993 1.3993         1.4341        1.4024
+SRR1039520 0.9165 0.9165         0.8898        0.9142
+SRR1039521 0.9451 0.9451         0.9848        0.9393
+Correlation DESeq2 vs TMM scaling: 0.9999 
+ The two methods agree closely on well-behaved data. They differ when a few
+ genes take a big share of reads, or when composition shifts globally.
+
+======================================================================
+  3. Composition bias: a simulation you should never forget
+======================================================================
+converting counts to integer mode
+Median log2FC of the 95% UNCHANGED genes:
+   CPM (total-count) normalization : -0.514 
+   median-of-ratios               : -0.006 
+ CPM makes every unchanged gene look DOWN-regulated, because the up-regulated
+ genes 'stole' sequencing depth. Median-of-ratios (and TMM) assume most genes
+ are not DE and correct for it.
+  saved: results/03_norm/composition_bias_sim.png
+
+======================================================================
+  4. Gene length: RPKM/FPKM and TPM
+======================================================================
+Column sums -- TPM always sums to 1e6, RPKM does not:
+     SRR1039508 SRR1039509 SRR1039512 SRR1039513 SRR1039516 SRR1039517
+TPM     1000000    1000000    1000000    1000000    1000000    1000000
+RPKM     281777     284202     273369     271390     286533     269871
+     SRR1039520 SRR1039521
+TPM     1000000    1000000
+RPKM     266696     256766
+
+TPM is good for comparing genes WITHIN a sample (gene A vs gene B).
+ For DE BETWEEN samples, gene length cancels out (same gene, same length), so
+ DE tools take RAW counts + size factors. Never give TPM/FPKM to DESeq2/edgeR:
+ they need the counts to model the count noise.
+Spearman cor(length, raw count) = 0.424   cor(length, TPM) = 0.016 
+
+======================================================================
+  5. Which normalized values for what?
+======================================================================
+  DE testing ...................... raw counts (tool normalizes internally)
+  PCA / clustering / heatmaps ..... VST or rlog (DESeq2), logCPM w/ prior (edgeR)
+  Plotting one gene ............... normalized counts, log scale
+  Comparing genes in one sample ... TPM
+  Sharing with collaborators ...... raw counts + metadata (+ TPM for browsing)
+Wrote normalized counts and TPM tables to results/03_norm 

@@ -1,0 +1,152 @@
+
+======================================================================
+  1. Build GO Biological Process gene sets (Entrez IDs)
+======================================================================
+Tested genes: 15826  with Entrez ID: 13786 
+GO BP sets with 15-500 genes in our universe: 4267 
+
+======================================================================
+  2. ORA by hand: hypergeometric test
+======================================================================
+Up-regulated genes (padj<.05, LFC>1) with Entrez: 451 
+Top terms for up-regulated genes:
+                                                    term  k   K fold     padj
+GO:0003012                         muscle system process 28 270 3.17 0.000145
+GO:0031589                       cell-substrate adhesion 28 275 3.11 0.000145
+GO:0030198             extracellular matrix organization 25 230 3.32 0.000145
+GO:0043062          extracellular structure organization 25 230 3.32 0.000145
+GO:0045229 external encapsulating structure organization 25 232 3.29 0.000145
+GO:0044057                  regulation of system process 30 325 2.82 0.000222
+GO:0042572                     retinol metabolic process  8  30 8.15 0.002341
+GO:2000146          negative regulation of cell motility 22 227 2.96 0.002926
+GO:0048514                    blood vessel morphogenesis 34 457 2.27 0.003371
+GO:0030336         negative regulation of cell migration 21 218 2.94 0.004196
+GO:0030855               epithelial cell differentiation 31 406 2.33 0.004222
+GO:0043500                             muscle adaptation 11  69 4.87 0.004762
+
+Significant terms (FDR<5%), correct universe (tested genes): 80 
+ Significant terms (FDR<5%), WRONG universe (whole genome):   24   (shared: 24 )
+
+Terms made MORE significant by the wrong universe (mostly-expressed sets):
+                                                      term log10p_correct
+               substrate adhesion-dependent cell spreading           -3.7
+ regulation of substrate adhesion-dependent cell spreading           -3.4
+                            cellular component disassembly           -1.5
+                     regulation of cell-substrate adhesion           -4.7
+                                   cell-substrate adhesion           -7.0
+           regulation of extracellular matrix organization           -2.8
+ log10p_wrong K_expressed K_genome ratio_K
+         -4.6          91      100    1.10
+         -4.0          55       61    1.11
+         -2.1         418      497    1.19
+         -5.2         176      220    1.25
+         -7.4         275      356    1.29
+         -3.2          53       62    1.17
+
+Terms made LESS significant (sets full of genes not expressed here):
+                                                  term log10p_correct
+                       epithelial cell differentiation           -5.0
+                          regulation of system process           -6.5
+                                 muscle system process           -7.2
+                 regulation of transmembrane transport           -4.1
+                  negative regulation of cell motility           -5.3
+ negative regulation of endothelial cell proliferation           -3.4
+ log10p_wrong K_expressed K_genome ratio_K
+         -2.7         406      741    1.83
+         -4.4         325      560    1.72
+         -5.3         270      452    1.67
+         -2.4         328      590    1.80
+         -3.8         227      388    1.71
+         -2.0          31       77    2.48
+
+The genome background changes the answer in BOTH directions, depending on
+ how many of a term's genes are expressed in this tissue (ratio_K). The
+ question you want answered is 'among genes that COULD have been called DE,
+ which functions are over-represented?' -- so the universe is the tested genes.
+
+limma::goana top 5 (should look like the hand-made ORA):
+                                       Term Ont    N  Up     P.Up
+GO:0032501 multicellular organismal process  BP 4610 220 5.86e-12
+GO:0048856 anatomical structure development  BP 3905 192 3.47e-11
+GO:0032502            developmental process  BP 4267 205 3.72e-11
+GO:0007155                    cell adhesion  BP  977  71 1.23e-10
+GO:0009888               tissue development  BP 1309  86 1.83e-10
+
+======================================================================
+  3. GSEA with fgsea (uses ALL genes, no cutoff)
+======================================================================
+GSEA significant (padj<5%): 188  (up: 111  down: 77 )
+                                             term   NES size    padj
+ 1:                                glucose import  2.11   57 0.00340
+ 2:                  regulation of glucose import  2.12   45 0.00340
+ 3:                       cell fate specification -2.13   58 0.00340
+ 4:                               ear development -1.91  130 0.00340
+ 5:               glucose transmembrane transport  2.00   82 0.00340
+ 6:                       cell-substrate adhesion  1.73  275 0.00365
+ 7:                hexose transmembrane transport  1.99   84 0.00401
+ 8:        monosaccharide transmembrane transport  1.98   86 0.00438
+ 9: cellular response to peptide hormone stimulus  1.74  232 0.00438
+10:          sulfur compound biosynthetic process  1.88  122 0.00438
+11:            intracellular chemical homeostasis  1.55  456 0.00438
+12:          carbohydrate transmembrane transport  1.93   92 0.00438
+13:                            learning or memory -1.75  179 0.00438
+14: regulation of glucose transmembrane transport  2.00   57 0.00438
+15:                          cell fate commitment -1.82  151 0.00438
+
+After collapsing redundant terms: 22 of 38 remain
+                                             term   NES    padj
+ 1:                                glucose import  2.11 0.00340
+ 2:                       cell fate specification -2.13 0.00340
+ 3:                               ear development -1.91 0.00340
+ 4:                       cell-substrate adhesion  1.73 0.00365
+ 5: cellular response to peptide hormone stimulus  1.74 0.00438
+ 6:          sulfur compound biosynthetic process  1.88 0.00438
+ 7:            intracellular chemical homeostasis  1.55 0.00438
+ 8:                            learning or memory -1.75 0.00438
+ 9:                          cell fate commitment -1.82 0.00438
+10:         cellular response to hormone stimulus  1.59 0.00438
+11:    regulation of actin filament-based process  1.67 0.00438
+12:                         muscle system process  1.67 0.00438
+13:                   hair follicle morphogenesis -2.11 0.00438
+14:                      regulation of cell shape  1.86 0.00461
+15:                   actin filament organization  1.59 0.00484
+  saved: results/06_enrichment/gsea_top_up.png
+  saved: results/06_enrichment/gsea_top_terms.png
+
+======================================================================
+  4. camera: competitive test that respects gene-gene correlation
+======================================================================
+camera (inter.gene.cor = 0.01) significant (FDR<5%): 16 
+                                                             term NGenes
+GO:0046324                           regulation of glucose import     45
+GO:0046323                                         glucose import     57
+GO:0031069                            hair follicle morphogenesis     19
+GO:0048730                                epidermis morphogenesis     21
+GO:0010827          regulation of glucose transmembrane transport     57
+GO:0050886                                      endocrine process     48
+GO:1904659                        glucose transmembrane transport     82
+GO:0010828 positive regulation of glucose transmembrane transport     33
+GO:0046326                  positive regulation of glucose import     28
+GO:0008643                                 carbohydrate transport    110
+           Direction     FDR
+GO:0046324        Up 0.00163
+GO:0046323        Up 0.00163
+GO:0031069      Down 0.00163
+GO:0048730      Down 0.00400
+GO:0010827        Up 0.00647
+GO:0050886        Up 0.01731
+GO:1904659        Up 0.02091
+GO:0010828        Up 0.02346
+GO:0046326        Up 0.02473
+GO:0008643        Up 0.02573
+
+camera with correlation ESTIMATED per set: significant = 0 
+ Compare with fgsea's 188 terms. Genes in a pathway are
+ co-regulated, so they are not independent evidence; tests that assume
+ independence are over-confident. With 8 samples the correlation estimate is
+ too noisy, hence the fixed 0.01 default. Treat GO results as hypotheses.
+
+======================================================================
+  5. (Optional) MSigDB Hallmark sets
+======================================================================
+msigdbr not installed -- skipping. install.packages('msigdbr') to enable.

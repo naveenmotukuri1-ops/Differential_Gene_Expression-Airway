@@ -1,0 +1,130 @@
+
+======================================================================
+  1. The design
+======================================================================
+      sex
+time   Female Male
+  Day0      4    3
+  Day4      4    4
+  Day8      4    3
+      infection
+time   NonInfected InfluenzaA
+  Day0           7          0
+  Day4           0          8
+  Day8           0          7
+Day0 == NonInfected and Day4/Day8 == InfluenzaA: infection is completely
+ determined by time. Remember this.
+Genes kept: 18185 
+
+======================================================================
+  2. Exploration: what drives variation?
+======================================================================
+using ntop=500 top features by variance
+  saved: results/07_multifactor/pca_time_sex.png
+Mean VST of sex-linked genes by annotated sex:
+        Female  Male
+Xist     15.33  6.76
+Ddx3y     6.36 12.20
+Kdm5d     6.23 10.70
+Eif2s3y   6.27 11.64
+Uty       6.24 10.65
+Xist high in females, Y genes high in males -> annotation is consistent.
+Mean R^2 over top-1000 variable genes:
+ time   sex 
+0.456 0.068 
+
+======================================================================
+  3. Confounding: a design that can't be fitted
+======================================================================
+Columns: 4  rank: 3 -> NOT full rank
+DESeq2 says:
+   the model matrix is not full rank, so the model cannot be fit as specified.
+  One or more variables or interaction terms in the design formula are linear
+  combinations of the others and must be remov ...
+No statistics can separate two factors that always move together.
+ Solve this at the DESIGN stage of an experiment, not the analysis stage.
+
+======================================================================
+  4. Additive model ~ sex + time, with contrasts
+======================================================================
+[1] "Intercept"          "sex_Male_vs_Female" "time_Day4_vs_Day0" 
+[4] "time_Day8_vs_Day0" 
+     Day4_vs_Day0 Day8_vs_Day0 Day8_vs_Day4 Male_vs_Female
+up            162         3663         2697             20
+down          249         3636         2668             33
+
+Top Day8 vs Day0 genes:
+          gene   lfc     padj
+           Asl  1.12 1.01e-74
+          Apod  1.45 1.60e-68
+       Cyp2d22  0.91 1.84e-56
+          Klk6 -1.67 2.77e-52
+         Fcrls -1.94 5.29e-48
+ A330076C08Rik -1.75 1.40e-47
+        Slc2a4  1.41 3.85e-47
+          Exd2 -0.73 3.44e-39
+          Plp1 -1.39 1.64e-38
+          Gnb4 -0.98 1.70e-38
+          Gjc2 -1.52 2.12e-38
+           Trf -0.96 6.05e-37
+           Tnc -1.95 8.04e-37
+        Tubb2b -1.14 8.04e-37
+         Fads1 -0.53 1.56e-36
+
+log2FC of interferon-stimulated vs myelin genes:
+      Day4_vs_Day0 Day8_vs_Day0
+Irf7          1.22         0.98
+Isg15         0.97         0.55
+Ifit1         1.07         0.61
+Oasl2         0.78         0.32
+Plp1         -0.49        -1.39
+Mog          -0.52        -0.98
+Mbp          -0.29        -0.41
+The interferon response is strongest at Day4 (Irf7/Isg15/Ifit1 near the top
+ of the Day4 list) and fades by Day8, when myelin genes are clearly down.
+ A time course lets you see the ORDER of events -- one snapshot would not.
+
+Numeric contrast Day8 - Day4 gives identical LFCs to the named contrast.
+
+======================================================================
+  5. Interaction: does the infection response differ by sex?
+======================================================================
+Genes with a significant sex x time interaction (LRT, FDR 5%): 3 
+[1] "Intercept"          "sex_Male_vs_Female" "time_Day4_vs_Day0" 
+[4] "time_Day8_vs_Day0"  "sexMale.timeDay4"   "sexMale.timeDay8"  
+Interpreting interaction coefficients:
+  time_Day8_vs_Day0          = Day8 effect in FEMALES (reference sex)
+  sexMale.timeDay8           = how much the Day8 effect DIFFERS in males
+  Day8 effect in males       = time_Day8_vs_Day0 + sexMale.timeDay8
+  saved: results/07_multifactor/interaction_top_genes.png
+With 3-4 mice per sex x time cell, interaction tests have LOW power.
+ A non-significant interaction is NOT evidence that males and females respond
+ the same. Plan ~2-4x more replicates if interactions are the main question.
+
+Group design: Day8 response in females: 4959 genes, in males: 4028 genes.
+ Classic trap: 'genes significant in males but not females' is NOT a test of
+ difference. Only the interaction test answers that question.
+
+======================================================================
+  6. LRT: any change across the time course
+======================================================================
+Genes changing at ANY time point (LRT, FDR 5%): 6953 
+ (The log2FC column of an LRT result is just one coefficient; ignore it --
+  the p-value refers to all time coefficients together.)
+
+======================================================================
+  7. Unknown batch effects: surrogate variable analysis
+======================================================================
+Estimated number of surrogate variables: 5 
+Number of significant surrogate variables is:  2 
+Iteration (out of 5 ):1  2  3  4  5  Do the SVs track anything we know? Correlation with sample metadata:
+    mouse male   day
+SV1 -0.18 0.48 -0.11
+SV2  0.05 0.24 -0.01
+Day8 vs Day0 significant: without SVs = 7299   with SVs = 7335 
+ SVs soak up unwanted variation, but every SV costs a degree of freedom and an
+ SV can also absorb real biology if it is correlated with your factor.
+ Always check what the SVs correlate with before trusting them.
+  saved: results/07_multifactor/pca_sv_removed.png
+Never run DE on removeBatchEffect output: the model would not know degrees
+ of freedom were spent. Put batch/SVs in the DESIGN instead (as above).

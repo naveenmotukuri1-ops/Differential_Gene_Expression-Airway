@@ -1,0 +1,75 @@
+
+======================================================================
+  1. Design matrix by hand
+======================================================================
+           (Intercept) cellN061011 cellN080611 cellN61311 dextreated
+SRR1039508           1           0           0          1          0
+SRR1039509           1           0           0          1          1
+SRR1039512           1           0           0          0          0
+SRR1039513           1           0           0          0          1
+SRR1039516           1           0           1          0          0
+SRR1039517           1           0           1          0          1
+SRR1039520           1           1           0          0          0
+SRR1039521           1           1           0          0          1
+attr(,"assign")
+[1] 0 1 1 1 2
+attr(,"contrasts")
+attr(,"contrasts")$cell
+[1] "contr.treatment"
+
+attr(,"contrasts")$dex
+[1] "contr.treatment"
+
+Columns: intercept = control in reference donor; cellN0xxxx = donor offsets;
+ dextreated = the treatment effect WITHIN donor -- the coefficient we test.
+
+======================================================================
+  2. edgeR quasi-likelihood pipeline
+======================================================================
+filterByExpr keeps 16860 genes
+Common BCV (biological coefficient of variation): 0.104 
+  ~0.1-0.2 for cell lines, 0.2-0.4 for inbred animals, 0.4+ for humans
+  saved: results/05_compare/edgeR_BCV.png
+  saved: results/05_compare/edgeR_QLdisp.png
+edgeR QL: FDR<5% = 5174 
+       dextreated
+Down         2523
+NotSig      11686
+Up           2651
+glmTreat |LFC|>1 at FDR 5%: 318 
+
+======================================================================
+  3. limma-voom
+======================================================================
+  saved: results/05_compare/voom_trend.png
+voom estimates the mean-variance trend on log-CPM and turns it into a
+ precision weight per observation. Then ordinary limma (with empirical Bayes)
+ applies -- the whole limma toolbox (contrasts, random effects, camera) opens up.
+limma-voom: FDR<5% = 5190 
+  saved: results/05_compare/voom_SA.png
+
+======================================================================
+  4. Donor as a random effect (duplicateCorrelation)
+======================================================================
+Consensus within-donor correlation: 0.541 
+voom + random donor effect: FDR<5% = 4947 
+
+======================================================================
+  5. Agreement between DESeq2, edgeR and limma-voom
+======================================================================
+Genes tested by all three: 15826 
+DESeq2  edgeR   voom 
+  4081   4995   5008 
+Called by all three: 3975   by exactly one: 177 
+  saved: results/05_compare/venn_methods.png
+LFC correlation (Pearson):
+           lfc_deseq2 lfc_edger lfc_voom
+lfc_deseq2      1.000     0.998    0.997
+lfc_edger       0.998     1.000    0.999
+lfc_voom        0.997     0.999    1.000
+  saved: results/05_compare/lfc_deseq2_vs_edger.png
+
+Median baseMean -- genes called by only one method: 316  vs all-three genes: 597 
+ Disagreements are lower-count genes sitting near the FDR cut-off (check their
+ padj in the methods that missed them: mostly 0.05-0.15). Report the robust core, and
+ never 'method-shop' for the tool that gives the answer you hoped for.

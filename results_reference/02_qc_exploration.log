@@ -1,0 +1,118 @@
+
+======================================================================
+  1. What are we looking at?
+======================================================================
+Genes x samples: 63677 8 
+               sample    cell     dex        geo avgLength
+SRR1039508 SRR1039508  N61311 control GSM1275862       126
+SRR1039509 SRR1039509  N61311 treated GSM1275863       126
+SRR1039512 SRR1039512 N052611 control GSM1275866       126
+SRR1039513 SRR1039513 N052611 treated GSM1275867        87
+SRR1039516 SRR1039516 N080611 control GSM1275870       120
+SRR1039517 SRR1039517 N080611 treated GSM1275871       126
+SRR1039520 SRR1039520 N061011 control GSM1275874       101
+SRR1039521 SRR1039521 N061011 treated GSM1275875        98
+
+The design: every donor (cell) contributes one control AND one treated
+ sample. This is a PAIRED design. Remember it: it decides the model in 04.
+         
+          control treated
+  N052611       1       1
+  N061011       1       1
+  N080611       1       1
+  N61311        1       1
+
+======================================================================
+  2. Library size and detection
+======================================================================
+               sample     dex    cell lib_size_M genes_detected pct_top100
+SRR1039508 SRR1039508 control  N61311       20.6          24633       29.3
+SRR1039509 SRR1039509 treated  N61311       18.8          24527       28.2
+SRR1039512 SRR1039512 control N052611       25.3          25699       32.1
+SRR1039513 SRR1039513 treated N052611       15.2          23124       31.2
+SRR1039516 SRR1039516 control N080611       24.4          25508       31.3
+SRR1039517 SRR1039517 treated N080611       30.8          25998       29.9
+SRR1039520 SRR1039520 control N061011       19.1          24662       31.3
+SRR1039521 SRR1039521 treated N061011       21.2          23991       30.3
+  saved: results/02_qc/library_sizes.png
+
+Libraries range 15.2 - 30.8 M reads. A 2-fold range is normal; normalization (module 03) handles it.
+ A sample with 10x fewer reads, or far fewer genes detected, is a red flag.
+
+% of counts by gene biotype (top 6):
+               SRR1039508 SRR1039509 SRR1039512 SRR1039513 SRR1039516
+protein_coding      94.07      94.32      94.39      94.70      94.09
+pseudogene           3.91       3.90       3.43       3.16       3.49
+lincRNA              0.65       0.64       0.81       0.82       0.59
+Mt_rRNA              0.35       0.37       0.62       0.60       1.01
+rRNA                 0.47       0.21       0.26       0.24       0.33
+antisense            0.24       0.23       0.24       0.22       0.23
+               SRR1039517 SRR1039520 SRR1039521
+protein_coding      94.86      94.71      94.99
+pseudogene           3.07       3.37       2.99
+lincRNA              0.55       0.77       0.71
+Mt_rRNA              0.77       0.42       0.41
+rRNA                 0.29       0.23       0.44
+antisense            0.22       0.24       0.22
+
+% counts on mitochondrial genes:
+SRR1039508 SRR1039509 SRR1039512 SRR1039513 SRR1039516 SRR1039517 SRR1039520 
+      3.07       3.55       3.76       4.27       4.92       4.17       3.40 
+SRR1039521 
+      3.36 
+
+======================================================================
+  3. Filtering low-count genes
+======================================================================
+Genes with zero counts in ALL samples: 30208 of 63677 
+Kept by 'count >= 10 in >= 4 samples': 16139 
+Why filter? Genes with almost no reads carry no information about DE,
+ but they DO count towards multiple-testing correction and slow everything down.
+ Note: DESeq2's independent filtering does this automatically at results()
+ time, so this pre-filter is mainly for speed and plots.
+  saved: results/02_qc/filtering_density.png
+
+======================================================================
+  4. The mean-variance relationship (why transformations matter)
+======================================================================
+  saved: results/02_qc/mean_variance.png
+Counts are over-dispersed: variance > mean (the red Poisson line).
+ This is why we model counts with the Negative Binomial distribution.
+`geom_smooth()` using method = 'gam' and formula = 'y ~ s(x, bs = "cs")'
+  saved: results/02_qc/meanSd_transforms.png
+log2(x+1) inflates SD of low-count genes (they dominate PCA with noise).
+ VST and rlog flatten that. Use VST by default; rlog when size factors vary a lot.
+
+======================================================================
+  5. PCA
+======================================================================
+using ntop=500 top features by variance
+  saved: results/02_qc/pca_vst.png
+Variance explained by PC1-4 (manual prcomp): 43.4 25.2 16.3 12 %
+Look at the plot: PC1 separates treatment; PC2 is donor (N080611 sits apart).
+ Within each donor, the treated sample shifts the same way along PC1.
+ Donor is a strong source of variation -> put `cell` in the design (module 04).
+
+Genes with the largest PC1 loadings:
+                  symbol loading
+ENSG00000162692    VCAM1  -0.095
+ENSG00000178695   KCTD12  -0.079
+ENSG00000124766     SOX4  -0.074
+ENSG00000138316 ADAMTS14  -0.073
+ENSG00000168398   BDKRB2  -0.071
+ENSG00000096060    FKBP5   0.117
+ENSG00000101347   SAMHD1   0.120
+ENSG00000152583  SPARCL1   0.121
+ENSG00000211445     GPX3   0.122
+ENSG00000109906   ZBTB16   0.131
+
+======================================================================
+  6. Sample-to-sample distances
+======================================================================
+  saved: results/02_qc/sample_distances.png
+Min pairwise Pearson r between samples: 0.9597 
+
+======================================================================
+  7. Save for later modules
+======================================================================
+Done. Look at every PNG in results/02_qc and answer the exercises in GUIDE.md.
